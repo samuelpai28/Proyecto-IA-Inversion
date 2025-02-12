@@ -1,0 +1,5 @@
+Welcome to Alpha Vantage! Here is your API key: YSOBJBRFVJLXY69E. Please record this API key at a safe place for future data access.
+
+
+open ia:
+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

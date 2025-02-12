@@ -1,0 +1,29 @@
+/* Estilos generales */
+body {
+    background-color: #121212; /* Fondo oscuro */
+    color: #ffffff; /* Texto en blanco */
+}
+
+/* Imagen de encabezado */
+img {
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+    max-height: 300px; /* Limita la altura */
+    width: auto; /* Ajusta el ancho automáticamente */
+}
+
+/* Título */
+h1 {
+    text-align: center;
+    color: #2E8B57;
+    font-size: 28px;
+}
+
+/* Chat */
+
+textarea {
+    background-color: #4105a8;
+    border-radius: 20px;
+    padding: 20px;
+}

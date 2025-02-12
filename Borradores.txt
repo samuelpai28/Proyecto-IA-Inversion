@@ -1,0 +1,150 @@
+import streamlit as st
+
+st.title("🦾Asistete Virtual")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "first_message" not in st.session_state:
+    st.session_state.first_message = True
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+if st.session_state.first_message:
+    with st.chat_message("assistant"):
+        st.markdown("Hola, ¿cómo puedo ayudarte?")
+
+    st.session_state.messages.append({"role": "assistant", "content": "Hola, ¿cómo puedo ayudarte?"})
+    st.session_state.first_message = False
+
+
+if prompt := st.chat_input("¿cómo puedo ayudarte?"):
+
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    st.session_state.messages.append({"role": "user", "content": prompt})
+
+    st.session_state.messages.append({"role": "assistant", "content": prompt})
+
+
+
+
+########################################################################################################
+En español:
+¿Qué es la inversión en la bolsa de valores?
+¿Cómo puedo calcular el retorno de inversión (ROI)?
+¿Cuáles son los mejores consejos para invertir en acciones?
+¿Qué es el crecimiento compuesto y cómo funciona?
+¿Cómo afecta la inflación a mis ahorros?
+¿Qué es una acción y cómo se compra?
+¿Qué significa diversificar una cartera de inversión?
+¿Cuál es la diferencia entre una inversión de bajo riesgo y una de alto riesgo?
+¿Qué tipos de fondos de inversión existen?
+¿Cómo puedo empezar a invertir en criptomonedas?
+En inglés:
+What is stock market investment?
+How can I calculate my ROI?
+What are the best strategies for investing in stocks?
+What is compound growth and how does it work?
+How does inflation affect my savings?
+What is a stock and how do I buy one?
+What does diversifying a portfolio mean?
+What’s the difference between low-risk and high-risk investments?
+What types of investment funds are there?
+How can I start investing in cryptocurrencies?
+
+
+-------------------------------------------------------------------------
+
+import streamlit as st
+from api_integration import get_stock_price  # Asegúrate de importar la función de integración API     
+from investment import calculate_roi, calculate_compound_growth  # Cálculos de inversión
+from gpt2_model import generate_text  # Importa la función del archivo gpt2_model.py
+
+# Configuración inicial
+st.title("🤖Asistente Virtual de Inversiones")
+
+# Función para generar respuestas simples
+def generate_response(user_input):
+    # Respuestas predeterminadas basadas en palabras clave
+    responses = {
+        "hola": "¡Hola! ¿Cómo puedo ayudarte hoy?",
+        "inversión": "Estoy aquí para ayudarte a entender mejor las opciones de inversión.",
+        "gracias": "¡De nada! ¿Te puedo ayudar con algo más?",
+        "adiós": "¡Hasta pronto!"
+    }
+    
+    # Convertir el input a minúsculas para comparación
+    user_input = user_input.lower()
+    
+    # Devuelve la respuesta predeterminada o un mensaje genérico
+    return responses.get(user_input, "Lo siento, no entiendo esa pregunta. ¿Puedes reformularla?")
+
+# Estado de la sesión para almacenar el historial de la conversación
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Mostrar el historial de mensajes
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Capturar el input del usuario
+if user_input := st.chat_input("Escribe tu pregunta aquí..."):
+    # Mostrar mensaje del usuario
+    with st.chat_message("user"):
+        st.markdown(user_input)
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    # Inicializar la respuesta
+    response = generate_response(user_input)
+
+    # Responder si hay palabras clave sobre inversiones
+    if "precio" in user_input or "acción" in user_input or "stock" in user_input:
+        # Solicitar el símbolo de la acción
+        symbol = st.text_input("¿Qué acción deseas consultar?", "")
+        if symbol:
+            price = get_stock_price(symbol)  # Llamada a la API
+            response = f"El precio actual de {symbol} es: {price} USD" if isinstance(price, float) else f"Error: {price}"
+
+    elif "ROI" in user_input.lower():
+        # Solicitar monto de inversión y ganancia
+        investment = st.number_input("Monto de la inversión:", min_value=0.0, step=100.0)
+        profit = st.number_input("Ganancia obtenida:", min_value=0.0, step=100.0)
+        if investment and profit:
+            roi = calculate_roi(investment, profit)
+            response = f"El retorno sobre inversión (ROI) es: {roi}%"
+
+    elif "crecimiento compuesto" in user_input.lower():
+        # Solicitar monto inicial, tasa de interés y años
+        principal = st.number_input("Monto inicial:", min_value=0.0, step=100.0)
+        rate = st.number_input("Tasa de interés anual (%):", min_value=0.0, step=0.1) / 100
+        years = st.number_input("Número de años:", min_value=1, step=1)
+        if principal and rate and years:
+            growth = calculate_compound_growth(principal, rate, years)
+            response = f"El valor final del crecimiento compuesto es: {growth} USD"
+
+    # Si la pregunta es más compleja, usar GPT-2 para generar una respuesta en lenguaje natural
+    elif "inversión" in user_input.lower() or "qué" in user_input.lower():
+        response = generate_text(user_input)  # Usa la función de GPT-2 para generar una respuesta
+
+    # Mostrar la respuesta del asistente
+    with st.chat_message("assistant"):
+        st.markdown(response)
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
+
+
+        # Obtener la respuesta principal
+        response_text = response.choices[0].message.content
+
+        # Verificar si la respuesta se cortó por el límite de tokens
+        if response.choices[0].finish_reason == "length":
+            response_extra = generate_text("Continúa la respuesta.", chat_history + [prompt, response_text])
+            response_text += " " + response_extra  # Agregar la continuación de la respuesta
+
+        return response_text
+
+    except openai.OpenAIError as e:
+        return f"Error al generar respuesta: {str(e)}"
